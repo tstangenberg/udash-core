@@ -7,6 +7,7 @@ import io.udash.bootstrap.carousel.UdashCarousel.AnimationOptions.{Hover, PauseO
 import io.udash.bootstrap.carousel.UdashCarousel.{AnimationOptions, CarouselEvent}
 import io.udash.bootstrap.utils.Icons
 import io.udash.wrappers.jquery.JQuery
+import org.scalajs.dom
 import org.scalajs.dom.Element
 
 import scala.concurrent.ExecutionContext
@@ -24,34 +25,28 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
   import UdashCarousel._
   import io.udash.wrappers.jquery._
 
-
-  def carouselId: String = s"$componentId-carousel"
-  //val active: Property[Int] = Property[Int](0)
-
   private lazy val indices = content.transform((slides: Seq[UdashCarouselSlide]) => slides.length)
-
-  private def indicators() = {
-    def indicator(index: Int) = {
-      li(dataTarget := s"#$carouselId", dataSlideTo := index, BootstrapStyles.active.styleIf(index == firstActive))
-    }
-    produce(indices)(length =>
-      ol(carouselIndicators)(
-        (0 until length).map(indicator).render
-      ).render
-    )
-  }
-
-  private def firstActive: Int = math.min(activeSlide, content.length - 1)
+  private lazy val _activeIndex: Property[Int] = Property[Int](firstActive)
 
   override lazy val render: Element = {
-    var _active = firstActive
+    def indicators() = {
+      def indicator(index: Int) =
+        li(dataTarget := s"#$carouselId", dataSlideTo := index, BootstrapStyles.active.styleIf(activeIndex.transform(idx => idx == index)))
+
+      produce(indices)(length =>
+        ol(carouselIndicators)(
+          (0 until length).map(indicator).render
+        ).render
+      )
+    }
+
+    val counter = new Countdown(firstActive)
     val res = div(id := carouselId, carousel, slide)(
       if (showIndicators) indicators() else {},
       div(carouselInner, role := "listbox")(
         repeat(content) { slide =>
           val res = slide.get.render
-          if (_active == 0) BootstrapStyles.active.applyTo(res)
-          else _active -= 1
+          if (counter.left() == 0) BootstrapStyles.active.applyTo(res)
           res
         }
       ),
@@ -64,13 +59,20 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
         span(`class` := "sr-only", "Next")
       )
     ).render
-    val jq = jQ(res).asCarousel()
-    jq.carousel(animationOptions)
-    if (!animationOptions.active) jq.pause()
+    val jq = jQ(res)
+    val jqCarousel = jq.asCarousel()
+    jqCarousel.on("slid.bs.carousel", (_: dom.Element, ev: JQueryEvent) =>
+      _activeIndex.set(content.get.iterator.zipWithIndex.collectFirst {
+        case (sl: UdashCarouselSlide, idx: Int) if sl.render == ev.relatedTarget => idx
+      }.get
+      )
+    )
+    jqCarousel.carousel(animationOptions)
+    if (!animationOptions.active) jqCarousel.pause()
     res
   }
 
-  private def jQSelector(): UdashCarouselJQuery = jQ(s"#$carouselId").asCarousel()
+  def activeIndex: ReadableProperty[Int] = _activeIndex.transform(identity)
 
   def cycle(): Unit = jQSelector().cycle()
 
@@ -82,10 +84,32 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
 
   def previousSlide(): Unit = jQSelector().previousSlide()
 
+  private def jQSelector(): UdashCarouselJQuery = jQ(render).asCarousel()
+
+  def carouselId: String = s"$componentId-carousel"
+
+  private def firstActive: Int = math.min(activeSlide, content.length - 1)
+
+  private class Countdown(private var ticks: Int) {
+    def left(): Int =
+      if (ticks > -1) {
+        val res = ticks
+        ticks -= 1
+        res
+      } else ticks
+  }
+
 
 }
 
 object UdashCarousel {
+
+  def apply(content: SeqProperty[UdashCarouselSlide], componentId: ComponentId = UdashBootstrap.newId(),
+            showIndicators: Boolean = true, activeSlide: Int = 0, animationOptions: AnimationOptions = AnimationOptions())
+           (implicit ec: ExecutionContext): UdashCarousel =
+    new UdashCarousel(content, componentId, showIndicators, activeSlide, animationOptions)
+
+  sealed trait CarouselEvent extends ListenableEvent[UdashCarousel]
 
   @js.native
   private trait UdashCarouselJQuery extends JQuery {
@@ -95,6 +119,32 @@ object UdashCarousel {
 
     def carousel(number: Int): UdashCarouselJQuery = js.native
   }
+
+  import scala.concurrent.duration._
+
+  @js.native
+  private trait CarouselOptionsJS extends js.Object {
+    var interval: Int = js.native
+    var pause: String = js.native
+    var wrap: Boolean = js.native
+    var keyboard: Boolean = js.native
+  }
+
+  case class AnimationOptions(interval: Duration = 5 seconds, pause: PauseOption = Hover, wrap: Boolean = true,
+                              keyboard: Boolean = true, active: Boolean = true) {
+    private[UdashCarousel] def native: CarouselOptionsJS = {
+      val options = js.Object().asInstanceOf[CarouselOptionsJS]
+      options.interval = interval.toMillis.toInt
+      options.pause = pause.raw
+      options.wrap = wrap
+      options.keyboard = keyboard
+      options
+    }
+  }
+
+  case class SlideChangeEvent(source: UdashCarousel) extends CarouselEvent
+
+  case class SlideChangedEvent(source: UdashCarousel) extends CarouselEvent
 
   private implicit class UdashCarouselJQueryExt(jQ: JQuery) {
     def asCarousel(): UdashCarouselJQuery = jQ.asInstanceOf[UdashCarouselJQuery]
@@ -116,20 +166,6 @@ object UdashCarousel {
 
   }
 
-  import scala.concurrent.duration._
-
-  case class AnimationOptions(interval: Duration = 5 seconds, pause: PauseOption = Hover, wrap: Boolean = true,
-                              keyboard: Boolean = true, active: Boolean = true) {
-    private[UdashCarousel] def native: CarouselOptionsJS = {
-      val options = js.Object().asInstanceOf[CarouselOptionsJS]
-      options.interval = interval.toMillis.toInt
-      options.pause = pause.raw
-      options.wrap = wrap
-      options.keyboard = keyboard
-      options
-    }
-  }
-
   object AnimationOptions {
 
     sealed abstract class PauseOption(val raw: String)
@@ -139,25 +175,6 @@ object UdashCarousel {
     case object False extends PauseOption("false")
 
   }
-
-  @js.native
-  private trait CarouselOptionsJS extends js.Object {
-    var interval: Int = js.native
-    var pause: String = js.native
-    var wrap: Boolean = js.native
-    var keyboard: Boolean = js.native
-  }
-
-  sealed trait CarouselEvent extends ListenableEvent[UdashCarousel]
-
-  case class SlideChangeEvent(source: UdashCarousel) extends CarouselEvent
-
-  case class SlideChangedEvent(source: UdashCarousel) extends CarouselEvent
-
-  def apply(content: SeqProperty[UdashCarouselSlide], componentId: ComponentId = UdashBootstrap.newId(),
-            showIndicators: Boolean = true, activeSlide: Int = 0, animationOptions: AnimationOptions = AnimationOptions())
-           (implicit ec: ExecutionContext): UdashCarousel =
-    new UdashCarousel(content, componentId, showIndicators, activeSlide, animationOptions)
 }
 
 case class UdashCarouselSlide(imgSrc: Url)(content: Modifier*) extends UdashBootstrapComponent {
