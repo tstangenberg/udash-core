@@ -3,6 +3,7 @@ package carousel
 
 import io.udash._
 import io.udash.bootstrap.UdashBootstrap.ComponentId
+import io.udash.bootstrap.carousel.UdashCarousel.CarouselEvent
 import io.udash.bootstrap.utils.Icons
 import org.scalajs.dom.Element
 
@@ -11,7 +12,7 @@ import scalacss.ScalatagsCss._
 import scalatags.JsDom.all._
 
 class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], carouselId: ComponentId, val showIndicators: Boolean)
-                   (implicit ec: ExecutionContext) extends UdashBootstrapComponent {
+                   (implicit ec: ExecutionContext) extends UdashBootstrapComponent with Listenable[UdashCarousel, CarouselEvent] {
 
   import BootstrapStyles.Carousel._
   import BootstrapTags._
@@ -59,13 +60,11 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], carouselId: Co
 
 object UdashCarousel {
 
-  sealed trait CarouselEvent extends ListenableEvent {
-    def carousel: UdashCarousel
-  }
+  sealed trait CarouselEvent extends ListenableEvent[UdashCarousel]
 
-  case class SlideChangeEvent(carousel: UdashCarousel) extends CarouselEvent
+  case class SlideChangeEvent(source: UdashCarousel) extends CarouselEvent
 
-  case class SlideChangedEvent(carousel: UdashCarousel) extends CarouselEvent
+  case class SlideChangedEvent(source: UdashCarousel) extends CarouselEvent
 
   def apply(content: SeqProperty[UdashCarouselSlide], carouselId: ComponentId = UdashBootstrap.newId(),
             showIndicators: Boolean = true)(implicit ec: ExecutionContext): UdashCarousel =

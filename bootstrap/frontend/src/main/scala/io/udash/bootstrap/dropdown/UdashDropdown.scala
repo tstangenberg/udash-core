@@ -11,7 +11,7 @@ import scalatags.JsDom.all._
 
 class UdashDropdown[T] private(val items: SeqProperty[T], dropup: Boolean = false, dropdownId: ComponentId = UdashBootstrap.newId())
                               (itemFactory: (T) => dom.Element)(mds: Modifier*)
-  extends Listenable[UdashDropdown.DropdownEvent[T]] {
+  extends Listenable[UdashDropdown[T], UdashDropdown.DropdownEvent[T]] {
 
   import UdashDropdown._
   import io.udash.wrappers.jquery._
@@ -49,19 +49,17 @@ class UdashDropdown[T] private(val items: SeqProperty[T], dropup: Boolean = fals
 
 object UdashDropdown {
 
-  sealed trait DropdownEvent[T] extends ListenableEvent {
-    def dropdown: UdashDropdown[T]
-  }
+  sealed trait DropdownEvent[T] extends ListenableEvent[UdashDropdown[T]]
 
-  case class DropdownShowEvent[T](dropdown: UdashDropdown[T]) extends DropdownEvent[T]
+  case class DropdownShowEvent[T](source: UdashDropdown[T]) extends DropdownEvent[T]
 
-  case class DropdownShownEvent[T](dropdown: UdashDropdown[T]) extends DropdownEvent[T]
+  case class DropdownShownEvent[T](source: UdashDropdown[T]) extends DropdownEvent[T]
 
-  case class DropdownHideEvent[T](dropdown: UdashDropdown[T]) extends DropdownEvent[T]
+  case class DropdownHideEvent[T](source: UdashDropdown[T]) extends DropdownEvent[T]
 
-  case class DropdownHiddenEvent[T](dropdown: UdashDropdown[T]) extends DropdownEvent[T]
+  case class DropdownHiddenEvent[T](source: UdashDropdown[T]) extends DropdownEvent[T]
 
-  case class SelectionEvent[T](dropdown: UdashDropdown[T], item: T) extends DropdownEvent[T]
+  case class SelectionEvent[T](source: UdashDropdown[T], item: T) extends DropdownEvent[T]
 
   sealed trait DefaultDropdownItem
   case class DropdownLink(title: String, url: Url) extends DefaultDropdownItem

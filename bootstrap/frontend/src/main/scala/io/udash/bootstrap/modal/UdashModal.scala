@@ -13,7 +13,7 @@ class UdashModal private(modalSize: ModalSize, fade: Boolean, labelId: String,
                         (headerFactory: Option[() => dom.Element],
                          bodyFactory: Option[() => dom.Element],
                          footerFactory: Option[() => dom.Element])
-  extends UdashBootstrapComponent with Listenable[UdashModal.ModalEvent]{
+  extends UdashBootstrapComponent with Listenable[UdashModal, UdashModal.ModalEvent] {
 
   import BootstrapTags._
   import UdashModal._
@@ -78,11 +78,15 @@ object UdashModal {
   case object StaticBackdrop extends BackdropType("static")
   case object NoneBackdrop extends BackdropType("false")
 
-  sealed abstract class ModalEvent(modal: UdashModal) extends ListenableEvent
-  case class ModalShowEvent(modal: UdashModal) extends ModalEvent(modal)
-  case class ModalShownEvent(modal: UdashModal) extends ModalEvent(modal)
-  case class ModalHideEvent(modal: UdashModal) extends ModalEvent(modal)
-  case class ModalHiddenEvent(modal: UdashModal) extends ModalEvent(modal)
+  sealed trait ModalEvent extends ListenableEvent[UdashModal]
+
+  case class ModalShowEvent(source: UdashModal) extends ModalEvent
+
+  case class ModalShownEvent(source: UdashModal) extends ModalEvent
+
+  case class ModalHideEvent(source: UdashModal) extends ModalEvent
+
+  case class ModalHiddenEvent(source: UdashModal) extends ModalEvent
 
   def apply(modalSize: ModalSize = ModalSize.Default, fade: Boolean = true, labelId: String = "",
             backdrop: BackdropType = ActiveBackdrop, keyboard: Boolean = true, autoInit: Boolean = true)

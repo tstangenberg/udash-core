@@ -12,7 +12,7 @@ import scalatags.JsDom.all._
 
 class UdashButton private(buttonStyle: ButtonStyle, size: ButtonSize, block: Boolean,
                           val active: Property[Boolean], val disabled: Property[Boolean])
-                         (mds: Modifier*) extends UdashBootstrapComponent with Listenable[ButtonClickEvent] {
+                         (mds: Modifier*) extends UdashBootstrapComponent with Listenable[UdashButton, ButtonClickEvent] {
 
   private lazy val classes: List[Modifier] = buttonStyle :: size ::
     BootstrapStyles.Button.btnBlock.styleIf(block) :: BootstrapStyles.active.styleIf(active) ::
@@ -39,7 +39,8 @@ class UdashButton private(buttonStyle: ButtonStyle, size: ButtonSize, block: Boo
 }
 
 object UdashButton {
-  case class ButtonClickEvent(button: UdashButton) extends ListenableEvent
+
+  case class ButtonClickEvent(source: UdashButton) extends ListenableEvent[UdashButton]
 
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
