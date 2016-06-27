@@ -1,6 +1,7 @@
 package io.udash.bootstrap
 package modal
 
+import io.udash.bootstrap.UdashBootstrap.ComponentId
 import io.udash.wrappers.jquery.JQuery
 import org.scalajs.dom
 import org.scalajs.dom.Element
@@ -14,11 +15,11 @@ class UdashModal private(modalSize: ModalSize, fade: Boolean, labelId: String,
                          footerFactory: Option[() => dom.Element])
   extends UdashBootstrapComponent with Listenable[UdashModal.ModalEvent]{
 
-  import io.udash.wrappers.jquery._
   import BootstrapTags._
   import UdashModal._
+  import io.udash.wrappers.jquery._
 
-  val dialogId = UdashBootstrap.newId()
+  val dialogId: ComponentId = UdashBootstrap.newId()
 
   def jQSelector(): UdashModalJQuery =
     jQ(s"#$dialogId").asModal()
@@ -52,7 +53,7 @@ class UdashModal private(modalSize: ModalSize, fade: Boolean, labelId: String,
     val el = div(
       BootstrapStyles.Modal.modal, BootstrapStyles.fade.styleIf(fade),
       tabindex := "-1", role := "dialog", aria.labelledby := labelId,
-      id := dialogId, BootstrapTags.dataBackdrop := backdrop.jsValue,
+      id := dialogId.id, BootstrapTags.dataBackdrop := backdrop.jsValue,
       BootstrapTags.dataKeyboard := keyboard, BootstrapTags.dataShow := autoInit
     )(
       div(BootstrapStyles.Modal.modalDialog, modalSize, role := "document")(

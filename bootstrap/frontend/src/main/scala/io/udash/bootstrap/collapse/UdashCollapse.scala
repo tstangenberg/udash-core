@@ -37,7 +37,7 @@ class UdashCollapse private(parentSelector: Option[String], toggleOnInit: Boolea
 
     val el = div(
       dataParent := parentSelector.getOrElse("false"), dataToggle := toggleOnInit,
-      BootstrapStyles.Collapse.collapse, id := collapseId
+      BootstrapStyles.Collapse.collapse, id := collapseId.id
     )(mds).render
 
     val jQEl = jQ(el)
