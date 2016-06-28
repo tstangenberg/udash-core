@@ -4,6 +4,7 @@ package carousel
 import io.udash._
 import io.udash.bootstrap.UdashBootstrap.ComponentId
 import io.udash.bootstrap.carousel.UdashCarousel.AnimationOptions.{Hover, PauseOption}
+import io.udash.bootstrap.carousel.UdashCarousel.CarouselEvent.Direction
 import io.udash.bootstrap.carousel.UdashCarousel.{AnimationOptions, CarouselEvent}
 import io.udash.bootstrap.utils.Icons
 import io.udash.wrappers.jquery.JQuery
@@ -13,6 +14,8 @@ import org.scalajs.dom.Element
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.util.Try
 import scalacss.ScalatagsCss._
 import scalatags.JsDom.all._
 
@@ -28,6 +31,10 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
   private lazy val indices = content.transform((slides: Seq[UdashCarouselSlide]) => slides.length)
   private lazy val _activeIndex: Property[Int] = Property[Int](firstActive)
 
+  content.listen(p => _activeIndex.set(p.zipWithIndex.collectFirst {
+    case (sl, idx) if jQ(sl.render).hasClass(BootstrapStyles.active.htmlClass) => idx
+  }.get))
+
   override lazy val render: Element = {
     def indicators() = {
       def indicator(index: Int) =
@@ -39,6 +46,18 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
         ).render
       )
     }
+
+    def extractEventData(ev: JQueryEvent): (Int, Direction) = {
+      val idx = content.get.iterator.zipWithIndex.collectFirst {
+        case (sl: UdashCarouselSlide, idx: Int) if sl.render == ev.relatedTarget => idx
+      }.get
+      val direction = Try {
+        val directionString = ev.asInstanceOf[Dictionary[String]].apply("direction")
+        if (directionString == "left") CarouselEvent.Left else if (directionString == "right") CarouselEvent.Right else CarouselEvent.Unknown
+      }
+      (idx, direction.getOrElse(CarouselEvent.Unknown))
+    }
+
 
     val counter = new Countdown(firstActive)
     val res = div(id := carouselId, carousel, slide)(
@@ -59,14 +78,17 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
         span(`class` := "sr-only", "Next")
       )
     ).render
-    val jq = jQ(res)
-    val jqCarousel = jq.asCarousel()
-    jqCarousel.on("slid.bs.carousel", (_: dom.Element, ev: JQueryEvent) =>
-      _activeIndex.set(content.get.iterator.zipWithIndex.collectFirst {
-        case (sl: UdashCarouselSlide, idx: Int) if sl.render == ev.relatedTarget => idx
-      }.get
-      )
-    )
+    val jqCarousel = jQ(res).asCarousel()
+    jqCarousel.on("slide.bs.carousel", (_: dom.Element, ev: JQueryEvent) => {
+      val (idx, dir) = extractEventData(ev)
+      _activeIndex.set(idx)
+      fire(SlideChangeEvent(this, idx, dir))
+    })
+    jqCarousel.on("slid.bs.carousel", (_: dom.Element, ev: JQueryEvent) => {
+      val (idx, dir) = extractEventData(ev)
+      _activeIndex.set(idx)
+      fire(SlideChangedEvent(this, idx, dir))
+    })
     jqCarousel.carousel(animationOptions)
     if (!animationOptions.active) jqCarousel.pause()
     res
@@ -109,7 +131,27 @@ object UdashCarousel {
            (implicit ec: ExecutionContext): UdashCarousel =
     new UdashCarousel(content, componentId, showIndicators, activeSlide, animationOptions)
 
-  sealed trait CarouselEvent extends ListenableEvent[UdashCarousel]
+  sealed trait CarouselEvent extends ListenableEvent[UdashCarousel] {
+    def targetIndex: Int
+
+    def direction: Direction
+  }
+
+  case class SlideChangeEvent(source: UdashCarousel, targetIndex: Int, direction: Direction) extends CarouselEvent
+
+  case class SlideChangedEvent(source: UdashCarousel, targetIndex: Int, direction: Direction) extends CarouselEvent
+
+  object CarouselEvent {
+
+    sealed trait Direction
+
+    case object Left extends Direction
+
+    case object Right extends Direction
+
+    case object Unknown extends Direction
+
+  }
 
   @js.native
   private trait UdashCarouselJQuery extends JQuery {
@@ -141,10 +183,6 @@ object UdashCarousel {
       options
     }
   }
-
-  case class SlideChangeEvent(source: UdashCarousel) extends CarouselEvent
-
-  case class SlideChangedEvent(source: UdashCarousel) extends CarouselEvent
 
   private implicit class UdashCarouselJQueryExt(jQ: JQuery) {
     def asCarousel(): UdashCarouselJQuery = jQ.asInstanceOf[UdashCarouselJQuery]
