@@ -70,11 +70,11 @@ class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: C
         }
       ),
       a(BootstrapStyles.left, carouselControl, href := s"#$carouselId", role := "button", dataSlide := "prev")(
-        Icons.FontAwesome.chevronLeft,
+        span(Icons.Glyphicon.chevronLeft),
         span(`class` := "sr-only", "Previous")
       ),
       a(BootstrapStyles.right, carouselControl, href := s"#$carouselId", role := "button", dataSlide := "next")(
-        Icons.FontAwesome.chevronRight,
+        span(Icons.Glyphicon.chevronRight),
         span(`class` := "sr-only", "Next")
       )
     ).render
