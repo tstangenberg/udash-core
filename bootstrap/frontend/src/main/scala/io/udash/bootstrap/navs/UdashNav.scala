@@ -5,12 +5,10 @@ import io.udash.properties.SeqProperty
 import io.udash.{properties, _}
 import org.scalajs.dom
 
-import scalacss.ScalatagsCss._
-import scalacss._
 import scalatags.JsDom.all._
 
 class UdashNav[ItemType, ElemType <: Property[ItemType]] private
-              (navStyle: StyleA, stacked: Boolean, justified: Boolean)
+              (navStyle: BootstrapStyles.BootstrapClass, stacked: Boolean, justified: Boolean)
               (val panels: properties.SeqProperty[ItemType, ElemType])
               (elemFactory: (ElemType) => dom.Node,
                isActive: (ElemType) => ReadableProperty[Boolean],

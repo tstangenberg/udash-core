@@ -24,7 +24,6 @@ object Dependencies extends Build {
   val scalatestVersion = "3.0.0-M15"
   val scalamockVersion = "3.2.2"
   val bootstrapVersion = "3.3.6"
-  val scalaCssVersion = "0.4.1"
 
   val compilerPlugins = Def.setting(Seq(
     "com.github.ghik" % "silencer-plugin" % silencerVersion
@@ -72,12 +71,6 @@ object Dependencies extends Build {
   val rpcBackendTestDeps = Def.setting(Seq(
     "org.scalamock" %% "scalamock-scalatest-support" % scalamockVersion
   ).map(_ % Test))
-
-  val bootstrapDeps = Def.setting(Seq(
-    "com.github.japgolly.scalacss" %%% "core" % scalaCssVersion,
-    "com.github.japgolly.scalacss" %%% "ext-scalatags" % scalaCssVersion,
-    "com.github.karasiq" %%% "scalajs-bootstrap" % "1.0.5" //todo remove once not needed
-  ))
 
   val bootstrapFrontendJsDeps = Def.setting(Seq[org.scalajs.sbtplugin.JSModuleID](
     "org.webjars" % "bootstrap" % bootstrapVersion / "bootstrap.js" minified "bootstrap.min.js" dependsOn "jquery.js"
