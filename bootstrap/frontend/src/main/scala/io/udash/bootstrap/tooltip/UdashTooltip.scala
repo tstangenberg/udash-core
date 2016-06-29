@@ -40,11 +40,11 @@ object UdashTooltip extends TooltipUtils[UdashTooltip] {
   protected val defaultTrigger: Seq[Trigger] = Seq(HoverTrigger, FocusTrigger)
 
   @js.native
-  trait UdashTooltipJQuery extends JQuery {
+  private trait UdashTooltipJQuery extends JQuery {
     def tooltip(arg: js.Any): UdashTooltipJQuery = js.native
   }
 
-  implicit class JQueryTooltipExt(jQ: JQuery) {
+  private implicit class JQueryTooltipExt(jQ: JQuery) {
     def asTooltip(): UdashTooltipJQuery =
       jQ.asInstanceOf[UdashTooltipJQuery]
   }

@@ -21,7 +21,7 @@ class UdashModal private(modalSize: ModalSize, fade: Boolean, labelId: String,
 
   val dialogId: ComponentId = UdashBootstrap.newId()
 
-  def jQSelector(): UdashModalJQuery =
+  private def jQSelector(): UdashModalJQuery =
     jQ(s"#$dialogId").asModal()
 
   def toggle(): Unit = jQSelector().modal("toggle")
@@ -96,11 +96,11 @@ object UdashModal {
   }
 
   @js.native
-  trait UdashModalJQuery extends JQuery {
+  private trait UdashModalJQuery extends JQuery {
     def modal(cmd: String): UdashModalJQuery = js.native
   }
 
-  implicit class UdashModalJQueryExt(jQ: JQuery) {
+  private implicit class UdashModalJQueryExt(jQ: JQuery) {
     def asModal(): UdashModalJQuery =
       jQ.asInstanceOf[UdashModalJQuery]
   }

@@ -6,7 +6,7 @@ import org.scalajs.dom
 import scalatags.JsDom.all._
 
 class UdashPanel private(panelStyle: PanelStyle)(mds: Modifier*) extends UdashBootstrapComponent {
-  lazy val render: dom.Element =
+  override lazy val render: dom.Element =
     div(BootstrapStyles.Panel.panel, panelStyle)(
       mds
     ).render

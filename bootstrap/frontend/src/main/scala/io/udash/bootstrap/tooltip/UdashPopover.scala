@@ -40,11 +40,11 @@ object UdashPopover extends TooltipUtils[UdashPopover] {
   protected val defaultTrigger: Seq[Trigger] = Seq(ClickTrigger)
 
   @js.native
-  trait UdashPopoverJQuery extends JQuery {
+  private trait UdashPopoverJQuery extends JQuery {
     def popover(arg: js.Any): UdashPopoverJQuery = js.native
   }
 
-  implicit class JQueryPopoverExt(jQ: JQuery) {
+  private implicit class JQueryPopoverExt(jQ: JQuery) {
     def asPopover(): UdashPopoverJQuery =
       jQ.asInstanceOf[UdashPopoverJQuery]
   }

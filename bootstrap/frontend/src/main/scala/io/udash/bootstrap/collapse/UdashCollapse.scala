@@ -17,7 +17,7 @@ class UdashCollapse private(parentSelector: Option[String], toggleOnInit: Boolea
 
   val collapseId = UdashBootstrap.newId()
 
-  def jQSelector(): UdashCollapseJQuery =
+  private def jQSelector(): UdashCollapseJQuery =
     jQ(s"#$collapseId").asCollapse()
 
   def toggle(): Unit = jQSelector().collapse("toggle")
@@ -64,11 +64,11 @@ object UdashCollapse {
     new UdashCollapse(parentSelector, toggleOnInit)(mds)
 
   @js.native
-  trait UdashCollapseJQuery extends JQuery {
+  private trait UdashCollapseJQuery extends JQuery {
     def collapse(cmd: String): UdashCollapseJQuery = js.native
   }
 
-  implicit class UdashCollapseJQueryExt(jQ: JQuery) {
+  private implicit class UdashCollapseJQueryExt(jQ: JQuery) {
     def asCollapse(): UdashCollapseJQuery =
       jQ.asInstanceOf[UdashCollapseJQuery]
   }
