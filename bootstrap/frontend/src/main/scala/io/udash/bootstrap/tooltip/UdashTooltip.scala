@@ -1,5 +1,6 @@
-package io.udash.bootstrap
+package io.udash.bootstrap.tooltip
 
+import io.udash.bootstrap.{Listenable, ListenableEvent}
 import io.udash.wrappers.jquery._
 import org.scalajs.dom
 
@@ -7,7 +8,7 @@ import scala.concurrent.duration.{Duration, DurationInt}
 import scala.language.postfixOps
 import scala.scalajs.js
 
-class UdashTooltip(selector: UdashTooltip.UdashTooltipJQuery) {
+class UdashTooltip(selector: UdashTooltip.UdashTooltipJQuery) extends Listenable[UdashTooltip, UdashTooltip.TooltipEvent] {
   def show(): Unit =
     selector.tooltip("show")
 
@@ -19,6 +20,13 @@ class UdashTooltip(selector: UdashTooltip.UdashTooltipJQuery) {
 
   def destroy(): Unit =
     selector.tooltip("destroy")
+
+  import UdashTooltip._
+  selector.on("show.bs.tooltip", jQFire(TooltipShowEvent(this)))
+  selector.on("shown.bs.tooltip", jQFire(TooltipShownEvent(this)))
+  selector.on("hide.bs.tooltip", jQFire(TooltipHideEvent(this)))
+  selector.on("hidden.bs.tooltip", jQFire(TooltipHiddenEvent(this)))
+  selector.on("inserted.bs.tooltip", jQFire(TooltipInsertedEvent(this)))
 }
 
 object UdashTooltip {
@@ -37,6 +45,13 @@ object UdashTooltip {
   case object HoverTrigger extends Trigger("hover")
   case object FocusTrigger extends Trigger("focus")
   case object ManualTrigger extends Trigger("manual")
+
+  sealed trait TooltipEvent extends ListenableEvent[UdashTooltip]
+  case class TooltipShowEvent(source: UdashTooltip) extends TooltipEvent
+  case class TooltipShownEvent(source: UdashTooltip) extends TooltipEvent
+  case class TooltipHideEvent(source: UdashTooltip) extends TooltipEvent
+  case class TooltipHiddenEvent(source: UdashTooltip) extends TooltipEvent
+  case class TooltipInsertedEvent(source: UdashTooltip) extends TooltipEvent
 
   def apply(animation: Boolean = true,
             container: Option[String] = None,
