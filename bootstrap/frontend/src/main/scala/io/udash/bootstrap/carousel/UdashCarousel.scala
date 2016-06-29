@@ -21,6 +21,7 @@ import scalatags.JsDom.all._
 class UdashCarousel(val content: SeqProperty[UdashCarouselSlide], componentId: ComponentId,
                     showIndicators: Boolean, activeSlide: Int, animationOptions: AnimationOptions)
                    (implicit ec: ExecutionContext) extends UdashBootstrapComponent with Listenable[UdashCarousel, CarouselEvent] {
+  require(activeSlide >= 0, "Active slide index cannot be negative.")
 
   import BootstrapStyles.Carousel._
   import BootstrapTags._

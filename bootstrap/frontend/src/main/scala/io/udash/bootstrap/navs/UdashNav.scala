@@ -16,7 +16,7 @@ class UdashNav[ItemType, ElemType <: Property[ItemType]] private
                isDropdown: (ElemType) => ReadableProperty[Boolean])
   extends UdashBootstrapComponent {
 
-  lazy val render: dom.Element =
+  override lazy val render: dom.Element =
     ul(
       BootstrapStyles.Navigation.nav, navStyle,
       BootstrapStyles.Navigation.navJustified.styleIf(justified),
