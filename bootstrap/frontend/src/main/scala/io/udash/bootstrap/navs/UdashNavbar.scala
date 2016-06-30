@@ -14,9 +14,10 @@ class UdashNavbar[ItemType, ElemType <: Property[ItemType]] private
   import BootstrapTags._
 
   private val collapseId = UdashBootstrap.newId()
+  val navId = UdashBootstrap.newId()
 
   lazy val render: dom.Element =
-    tags2.nav(BootstrapStyles.Navigation.navbar, navbarStyle)(
+    tags2.nav(id := navId.id, BootstrapStyles.Navigation.navbar, navbarStyle)(
       div(BootstrapStyles.containerFluid)(
         div(BootstrapStyles.Navigation.navbarHeader)(
           button(
