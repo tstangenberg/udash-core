@@ -9,6 +9,7 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 
+//todo does not work with udash routing
 class UdashScrollspy private(navId: String, spied: dom.Element, offset: Int) extends Listenable[UdashScrollspy, ElementActivated] {
 
   import UdashScrollspy._
